@@ -24,6 +24,8 @@ from typing import Literal
 
 class GaussProt(object):
 
+    multiplier = 10
+
     def __init__(
             self,
             schema: dict,
@@ -100,7 +102,7 @@ class GaussProt(object):
         sequence_lengths = [len(seq) for seq in sequences]
         ML = max(sequence_lengths)
         N = len(sequences)
-        vector_length = self.discrete_model_length or 10
+        vector_length = self.discrete_model_length or self.multiplier
         MVL = vector_length * (ML + 2)
         weights_frame = np.zeros((N, ML))
         matrix_frame = np.zeros((N, MVL))

@@ -35,7 +35,8 @@ class GaussProt(object):
             model_type: Literal['discrete', 'continuous'] = 'discrete',
             discrete_model_length: int = None,
             padded: bool = True,
-            verbose: bool = False
+            verbose: bool = False,
+            validate_schema: bool = True
     ):
         """
         GaussProt class implements an algorithm to create Gaussian kernel models of proteins.
@@ -54,8 +55,10 @@ class GaussProt(object):
         :param padded: In case of continuous model, shorted proteins will be padded with zeros at the end. Only applies
         to continuous model.
         :param verbose: If true the program will print the parameters at the start of the modeling process.
+        :param validate_schema: If true schema keys will be validated against 20 common amino acids.
         """
         self.standardize_schema = standardize_schema
+        self.validate_schema = validate_schema
         self.shard_size = shard_size
         self.bandwidth = bandwidth
         self.model_type = model_type
@@ -65,7 +68,8 @@ class GaussProt(object):
         self.discrete_model_length = discrete_model_length
         self.padded = padded
         self.schema = schema
-        self._validate_schema()
+        if validate_schema:
+            self._validate_schema()
         if standardize_schema:
             self._standardize_schema()
 
@@ -80,6 +84,7 @@ class GaussProt(object):
             print(f'model_type: {self.model_type}')
             print(f'bandwidth: {self.bandwidth}')
             print(f'standardize_schema: {self.standardize_schema}')
+            print(f'validate_schema: {self.validate_schema}')
             print(f'shard_size: {self.shard_size}')
             if self.model_type == 'discrete' and self.discrete_model_length:
                 print(f'discrete_model_length: {self.discrete_model_length}')
@@ -109,9 +114,12 @@ class GaussProt(object):
         x = np.linspace(-2.3263, 2.3263, 3 * vector_length)
         pdf_template = self._pdf(x)
         # vectorize weights
-        for i, seq in enumerate(sequences):
-            weights = [self.schema[a] for a in seq]
-            weights_frame[i, 0:len(weights)] = weights
+        try:
+            for i, seq in enumerate(sequences):
+                weights = [self.schema[a] for a in seq]
+                weights_frame[i, 0:len(weights)] = weights
+        except KeyError as e:
+            raise KeyError(f'Not found in schema\n {e}')
         # compute continuous profiles
         idx = list(zip(range(ML), range(0, MVL - vector_length, vector_length)))
         for wi, si in idx:

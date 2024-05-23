@@ -1,3 +1,22 @@
+"""
+    Gaussprot - utility for creating Gaussian kernel models of proteins
+
+    Copyright (C) 2024  Stefan Stojanovic
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
 
 import numpy as np
 from typing import Literal
@@ -17,17 +36,22 @@ class GaussProt(object):
             verbose: bool = False
     ):
         """
-        GaussProt main class.
+        GaussProt class implements an algorithm to create Gaussian kernel models of proteins.
 
-
-        :param schema:
-        :param standardize_schema:
-        :param shard_size:
-        :param bandwidth:
-        :param model_type:
-        :param discrete_model_length:
-        :param padded:
-        :param verbose:
+        :param schema: Dictionary with key-value pairs where the keys are one-letter amino-acid codes and values are
+        the corresponding values.
+        :param standardize_schema: If true schema values will be standardized to range -1:1 before modelling.
+        :param shard_size: Due to memory limitations the algorithm is implemented with sharding. In case of short
+        proteins the default shard_size should be enough to save memory. In case of larger proteins shard_size
+        should be decreased.
+        :param bandwidth: Width of the Gaussian kernel.
+        :param model_type: Discrete of continuous output.
+        :param discrete_model_length: In case of discrete model, if set this parameter will scale all model vectors to
+        be this length. This is achieved by calculating AUC of the continuous model at fixed number of windows. Only
+        applies to discrete model.
+        :param padded: In case of continuous model, shorted proteins will be padded with zeros at the end. Only applies
+        to continuous model.
+        :param verbose: If true the program will print the parameters at the start of the modeling process.
         """
         self.standardize_schema = standardize_schema
         self.shard_size = shard_size
@@ -134,7 +158,6 @@ class GaussProt(object):
             raise ValueError('Invalid schema.\nValid letters: {}'.format(valid_letters))
 
     def _standardize_schema(self):
-        standard_params = {}
         vals = list(self.schema.values())
         min_ = min(vals)
         max_ = max(vals)

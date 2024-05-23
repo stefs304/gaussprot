@@ -96,6 +96,7 @@ class GaussProt(object):
         return np.concatenate(shards)
 
     def _generate_models(self, sequences: list[str]) -> np.ndarray:
+        """My sacrifice, O God, is a broken spirit;"""
         sequence_lengths = [len(seq) for seq in sequences]
         ML = max(sequence_lengths)
         N = len(sequences)

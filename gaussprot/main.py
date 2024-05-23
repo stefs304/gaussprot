@@ -60,6 +60,17 @@ class GaussProt(object):
             elif self.model_type == 'continuous':
                 print(f'padded: {self.padded}')
 
+        if len(sequences) <= self.shard_size:
+            return self._generate_models(sequences)
+
+        shards = []
+        for i in range(0, len(sequences), self.shard_size):
+            slice_ = sequences[i: i+self.shard_size]
+            if len(slice_) < 1:
+                break
+            shards.append(self._generate_models(slice_))
+        return np.concatenate(shards)
+
     def _generate_models(self, sequences: list[str]) -> np.ndarray:
         sequence_lengths = [len(seq) for seq in sequences]
         ML = max(sequence_lengths)
@@ -69,7 +80,7 @@ class GaussProt(object):
         weights_frame = np.zeros((N, ML))
         matrix_frame = np.zeros((N, MVL))
         x = np.linspace(-2.3263, 2.3263, 3 * vector_length)
-        pdf_template = self.pdf(x)
+        pdf_template = self._pdf(x)
         # vectorize weights
         for i, seq in enumerate(sequences):
             weights = [self.schema[a] for a in seq]
@@ -83,32 +94,44 @@ class GaussProt(object):
         if self.model_type == 'continuous':
             if self.padded:
                 return matrix_frame
-
+            non_padded = np.array([])
+            for i in range(N):
+                SL = sequence_lengths[i]
+                CVL = vector_length * (SL + 2)
+                slice = matrix_frame[i, vector_length: CVL - vector_length]
+                non_padded[i] = slice
+            return non_padded
         # compute discrete profiles
-        discrete_matrix_frame = np.zeros((N, vector_length))
+        if self.discrete_model_length:
+            discrete_matrix_frame = np.zeros((N, self.discrete_model_length))
+        else:
+            discrete_matrix_frame = np.array([])
         for i in range(N):
             SL = sequence_lengths[i]
             CVL = vector_length * (SL + 2)
-            slice = matrix_frame[i, vector_length: CVL - vector_length]  # trimmed length continuous profile
-            # slice = matrix_frame[i, 0:CVL]    # full length continuous profile
-            windows = np.split(slice, vector_length)
-            discrete_matrix_frame[i, :] = self.trapezoidal(windows)
+            slice = matrix_frame[i, vector_length: CVL - vector_length]
+            if self.discrete_model_length:
+                windows = np.split(slice, vector_length)
+                discrete_matrix_frame[i, :] = self._trapezoidal(windows)
+            else:
+                windows = np.split(slice, SL)
+                discrete_matrix_frame[i] = self._trapezoidal(windows)
         return discrete_matrix_frame
 
-    def pdf(self, x):
+    def _pdf(self, x):
         y = np.exp(-x ** 2 / (2 * self.bandwidth)) / (self.bandwidth * np.sqrt(2 * np.pi))
         return (y - y.min()) / (y.max() - y.min())
 
     @staticmethod
-    def trapezoidal(windows):
+    def _trapezoidal(windows):
         values = []
-        for array in arrays:
+        for array in windows:
             integral = 0
             for a in array:
                 integral += a
             integral *= 0.5
             values.append(integral)
-        return values
+        return np.array(values)
 
     def _validate_schema(self):
         valid_letters = ['A', 'C', 'G', 'T']

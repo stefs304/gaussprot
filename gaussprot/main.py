@@ -112,10 +112,10 @@ class GaussProt(object):
             slice = matrix_frame[i, vector_length: CVL - vector_length]
             if self.discrete_model_length:
                 windows = np.split(slice, vector_length)
-                discrete_matrix_frame[i, :] = self._trapezoidal(windows)
+                discrete_matrix_frame[i, :] = self._auc(windows)
             else:
                 windows = np.split(slice, SL)
-                discrete_matrix_frame[i] = self._trapezoidal(windows)
+                discrete_matrix_frame[i] = self._auc(windows)
         return discrete_matrix_frame
 
     def _pdf(self, x):
@@ -123,15 +123,8 @@ class GaussProt(object):
         return (y - y.min()) / (y.max() - y.min())
 
     @staticmethod
-    def _trapezoidal(windows):
-        values = []
-        for array in windows:
-            integral = 0
-            for a in array:
-                integral += a
-            integral *= 0.5
-            values.append(integral)
-        return np.array(values)
+    def _auc(windows):
+        return np.array([array.sum() / 2.0 for array in windows])
 
     def _validate_schema(self):
         valid_letters = ['A', 'C', 'G', 'T']

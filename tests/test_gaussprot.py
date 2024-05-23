@@ -29,7 +29,21 @@ class TestGaussProt(unittest.TestCase):
             self.assertEquals(fixed_length, len(models[i]))
 
     def test_continuous_case(self):
-        pass
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='continuous')
+        models = gp.generate_models(VALID_SEQUENCES)
+        self.assertEquals(len(models), len(VALID_SEQUENCES))
+        self.assertEquals(type(models), list)
+        for i in range(len(VALID_SEQUENCES)):
+            expected_length = max([len(seq) for seq in VALID_SEQUENCES]) * gp.multiplier
+            self.assertEquals(expected_length, len(models[i]))
+
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='continuous', padded=False)
+        models = gp.generate_models(VALID_SEQUENCES)
+        self.assertEquals(len(models), len(VALID_SEQUENCES))
+        self.assertEquals(type(models), list)
+        for i in range(len(VALID_SEQUENCES)):
+            expected_length = len(VALID_SEQUENCES[i]) * gp.multiplier
+            self.assertEquals(expected_length, len(models[i]))
 
     def test_exceptions(self):
 

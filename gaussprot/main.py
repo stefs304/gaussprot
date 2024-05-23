@@ -128,7 +128,7 @@ class GaussProt(object):
             matrix_frame += ith_frame
         if self.model_type == 'continuous':
             if self.padded:
-                return [row for row in matrix_frame]
+                return [row[self.multiplier:-self.multiplier] for row in matrix_frame]
             non_padded = []
             for i in range(N):
                 SL = sequence_lengths[i]

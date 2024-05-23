@@ -127,11 +127,17 @@ class GaussProt(object):
         return np.array([array.sum() / 2.0 for array in windows])
 
     def _validate_schema(self):
-        valid_letters = ['A', 'C', 'G', 'T']
-        if not all([k in valid_letters for k in self.schema]):
+        valid_letters = [
+            'C', 'D', 'S', 'Q', 'K', 'I', 'P', 'T', 'F', 'N', 'G', 'H', 'L', 'R', 'W', 'A', 'V', 'E', 'Y', 'M'
+        ]
+        if not all([k in self.schema for k in valid_letters]):
             raise ValueError('Invalid schema.\nValid letters: {}'.format(valid_letters))
 
     def _standardize_schema(self):
-        pass
-
+        standard_params = {}
+        vals = list(self.schema.values())
+        min_ = min(vals)
+        max_ = max(vals)
+        for k, v in self.schema.items():
+            self.schema[k] = 2 * (v - min_) / (max_ - min_) - 1
 

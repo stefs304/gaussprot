@@ -73,7 +73,7 @@ class GaussProt(object):
         if standardize_schema:
             self._standardize_schema()
 
-    def generate_models(self, sequences: list[str]) -> np.ndarray:
+    def generate_models(self, sequences: list[str]) -> list[np.ndarray]:
         """
         Generate models of sequences.
         :param sequences: List of protein sequences
@@ -99,10 +99,10 @@ class GaussProt(object):
             slice_ = sequences[i: i+self.shard_size]
             if len(slice_) < 1:
                 break
-            shards.append(self._generate_models(slice_))
-        return np.concatenate(shards)
+            shards.extend(self._generate_models(slice_))
+        return shards
 
-    def _generate_models(self, sequences: list[str]) -> np.ndarray:
+    def _generate_models(self, sequences: list[str]) -> list[np.ndarray]:
         """My sacrifice, O God, is a broken spirit;"""
         sequence_lengths = [len(seq) for seq in sequences]
         ML = max(sequence_lengths)
@@ -128,29 +128,26 @@ class GaussProt(object):
             matrix_frame += ith_frame
         if self.model_type == 'continuous':
             if self.padded:
-                return matrix_frame
-            non_padded = np.array([])
+                return [row for row in matrix_frame]
+            non_padded = []
             for i in range(N):
                 SL = sequence_lengths[i]
                 CVL = vector_length * (SL + 2)
                 slice = matrix_frame[i, vector_length: CVL - vector_length]
-                non_padded[i] = slice
+                non_padded.append(slice)
             return non_padded
         # compute discrete profiles
-        if self.discrete_model_length:
-            discrete_matrix_frame = np.zeros((N, self.discrete_model_length))
-        else:
-            discrete_matrix_frame = np.array([])
+        discrete_matrix_frame = []
         for i in range(N):
             SL = sequence_lengths[i]
             CVL = vector_length * (SL + 2)
             slice = matrix_frame[i, vector_length: CVL - vector_length]
             if self.discrete_model_length:
                 windows = np.split(slice, vector_length)
-                discrete_matrix_frame[i, :] = self._auc(windows)
+                discrete_matrix_frame.append(self._auc(windows))
             else:
                 windows = np.split(slice, SL)
-                discrete_matrix_frame[i] = self._auc(windows)
+                discrete_matrix_frame.append(self._auc(windows))
         return discrete_matrix_frame
 
     def _pdf(self, x):

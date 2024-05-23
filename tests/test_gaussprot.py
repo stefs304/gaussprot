@@ -1,22 +1,42 @@
 
 import unittest
-
-
-schema = {}
-sequences = [
-
-]
+import numpy as np
+from gaussprot import GaussProt
+from .data import (
+    VALID_SCHEMA,
+    INVALID_SCHEMA,
+    VALID_SEQUENCES,
+    INVALID_SEQUENCES
+)
 
 
 class TestGaussProt(unittest.TestCase):
 
     def test_discrete_case(self):
-        pass
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete')
+        models = gp.generate_models(VALID_SEQUENCES)
+        self.assertEquals(len(models), len(VALID_SEQUENCES))
+        self.assertEquals(type(models), list)
+        for i in range(len(VALID_SEQUENCES)):
+            self.assertEquals(len(VALID_SEQUENCES[i]), len(models[i]))
+
+        fixed_length = 5
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete', discrete_model_length=fixed_length)
+        models = gp.generate_models(VALID_SEQUENCES)
+        self.assertEquals(len(models), len(VALID_SEQUENCES))
+        self.assertEquals(type(models), list)
+        for i in range(len(VALID_SEQUENCES)):
+            self.assertEquals(fixed_length, len(models[i]))
 
     def test_continuous_case(self):
         pass
 
     def test_exceptions(self):
-        pass
 
+        with self.assertRaises(ValueError):
+            GaussProt(schema=INVALID_SCHEMA)
+
+        gp = GaussProt(schema=VALID_SCHEMA)
+        with self.assertRaises(KeyError):
+            gp.generate_models(sequences=INVALID_SEQUENCES)
 

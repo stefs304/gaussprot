@@ -72,6 +72,8 @@ class GaussProt(object):
             self._validate_schema()
         if standardize_schema:
             self._standardize_schema()
+        if model_type == 'continuous' and discrete_model_length:
+            raise AttributeError('discrete_model_length cannot be set when model_type is continuous')
 
     def generate_models(self, sequences: list[str]) -> list[np.ndarray]:
         """

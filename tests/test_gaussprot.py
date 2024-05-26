@@ -54,3 +54,47 @@ class TestGaussProt(unittest.TestCase):
         with self.assertRaises(KeyError):
             gp.generate_models(sequences=INVALID_SEQUENCES)
 
+    def test_init_signature(self):
+        raised = False
+        try:
+            GaussProt(
+                schema=VALID_SCHEMA,
+                standardize_schema=True,
+                shard_size=1000,
+                bandwidth=0.5,
+                model_type='discrete',
+                discrete_model_length=11,
+                verbose=True,
+                validate_schema=True
+            )
+            GaussProt(
+                schema=VALID_SCHEMA,
+                standardize_schema=False,
+                shard_size=1000,
+                bandwidth=0.1,
+                model_type='continuous',
+                padded=False,
+                verbose=False,
+                validate_schema=False
+            )
+        except Exception as e:
+            print(e)
+            raised = True
+        self.assertFalse(raised, 'v <= 0.0.1 signature test failed.')
+
+    def test_simply_encode(self):
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete', padded=False)
+        encoded = gp.simply_encode(VALID_SEQUENCES)
+        self.assertEqual(len(encoded), len(VALID_SEQUENCES))
+        self.assertEqual(type(encoded), list)
+        for i in range(len(VALID_SEQUENCES)):
+            self.assertEqual(len(VALID_SEQUENCES[i]), len(encoded[i]))
+
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete', padded=True)
+        encoded = gp.simply_encode(VALID_SEQUENCES)
+        max_len = max([len(seq) for seq in VALID_SEQUENCES])
+        self.assertEqual(len(VALID_SEQUENCES), len(encoded))
+        self.assertEqual(type(encoded), list)
+        for enc_seq in encoded:
+            self.assertEqual(max_len, len(enc_seq))
+

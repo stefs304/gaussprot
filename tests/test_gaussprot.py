@@ -54,3 +54,31 @@ class TestGaussProt(unittest.TestCase):
         with self.assertRaises(KeyError):
             gp.generate_models(sequences=INVALID_SEQUENCES)
 
+    def test_init_signature(self):
+        raised = False
+        try:
+            GaussProt(
+                schema=VALID_SCHEMA,
+                standardize_schema=True,
+                shard_size=1000,
+                bandwidth=0.5,
+                model_type='discrete',
+                discrete_model_length=11,
+                verbose=True,
+                validate_schema=True
+            )
+            GaussProt(
+                schema=VALID_SCHEMA,
+                standardize_schema=False,
+                shard_size=1000,
+                bandwidth=0.1,
+                model_type='continuous',
+                padded=False,
+                verbose=False,
+                validate_schema=False
+            )
+        except Exception as e:
+            print(e)
+            raised = True
+        self.assertFalse(raised, 'v <= 0.0.1 signature test failed.')
+

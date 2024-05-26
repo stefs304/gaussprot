@@ -82,3 +82,19 @@ class TestGaussProt(unittest.TestCase):
             raised = True
         self.assertFalse(raised, 'v <= 0.0.1 signature test failed.')
 
+    def test_simply_encode(self):
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete', padded=False)
+        encoded = gp.simply_encode(VALID_SEQUENCES)
+        self.assertEqual(len(encoded), len(VALID_SEQUENCES))
+        self.assertEqual(type(encoded), list)
+        for i in range(len(VALID_SEQUENCES)):
+            self.assertEqual(len(VALID_SEQUENCES[i]), len(encoded[i]))
+
+        gp = GaussProt(schema=VALID_SCHEMA, model_type='discrete', padded=True)
+        encoded = gp.simply_encode(VALID_SEQUENCES)
+        max_len = max([len(seq) for seq in VALID_SEQUENCES])
+        self.assertEqual(len(VALID_SEQUENCES), len(encoded))
+        self.assertEqual(type(encoded), list)
+        for enc_seq in encoded:
+            self.assertEqual(max_len, len(enc_seq))
+

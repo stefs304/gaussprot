@@ -174,3 +174,19 @@ class GaussProt(object):
         for k, v in self.schema.items():
             self.schema[k] = 2 * (v - min_) / (max_ - min_) - 1
 
+    def simply_encode(self, sequences: list[str]) -> list[np.ndarray]:
+        """
+        Encode sequences using the schema.
+        :param sequences: list of sequences
+        :return: list[np.ndarray]
+        """
+        if not self.padded:
+            return [np.array([self.schema[x] for x in seq]) for seq in sequences]
+        encoded_sequences = []
+        max_len = max([len(seq) for seq in sequences])
+        for seq in sequences:
+            enc_seq = [self.schema[x] for x in seq]
+            if len(enc_seq) < max_len:
+                enc_seq.extend([0]*(max_len - len(enc_seq)))
+            encoded_sequences.append(np.array(enc_seq))
+        return encoded_sequences
